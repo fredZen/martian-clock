@@ -1,0 +1,21 @@
+{
+  "homepage": "http://fredZen.github.io/martian-clock",
+  "dependencies": {
+    "d3": "^5.9.7",
+    "d3-transform": "^1.0.5"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.1.0",
+    "gh-pages": "^2.0.1",
+    "source-map-support": "^0.5.12"
+  },
+  "scripts": {
+    "dev": "shadow-cljs watch app",
+    "repl": "shadow-cljs cljs-repl app",
+    "test": "shadow-cljs watch test",
+    "build": "shadow-cljs release app",
+    "copy-html": "copyup assets/* target",
+    "predeploy": "npm run build && npm run copy-html",
+    "deploy": "gh-pages -d target"
+  }
+}
