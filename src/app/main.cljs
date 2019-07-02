@@ -4,6 +4,7 @@
 
 (ns app.main
   (:require
+   [clojure.string :as string]
    ["d3" :as d3]
    ["d3-transform" :as d3-transform]))
 
@@ -153,7 +154,7 @@
       (.attr "r" (fn [d & _] (-> d :radius)))))
 
 (defn init-clock! []
-  (-> (clock) (.attr "height" height) (.attr "width" width) draw-dials)
+  (-> (clock) (.attr "viewBox" (string/join " " [0 0 width height])) draw-dials)
   (let [now (js/Date.)]
     (-> (lines now)
         .enter
