@@ -18,19 +18,20 @@
 (def height (* (+ terran-size martian-size) 2))
 (def terran-center {:x terran-size :y (+ terran-size (* martian-size 2))})
 (def martian-center {:x terran-size :y martian-size})
+(def update-interval 1000)
 
 (def seconds-per-day (* 24 60 60))
 
 (defn seconds-of-day
-  ([]
-   (seconds-of-day (js/Date.)))
   ([date]
-   (let [offset (.getTimezoneOffset date)]
-     (-> date
-         (.getTime)
-         (/ 1000)
-         (- (* offset 60))
-         (mod seconds-per-day)))))
+   (seconds-of-day date 0))
+  ([date offset]
+   (-> date
+       .getTime
+       (+ offset)
+       (/ 1000)
+       (- (-> date .getTimezoneOffset (* 60)))
+       (mod seconds-per-day))))
 
 (defn round3 [x]
   (-> x (* 1000) (Math/round) (/ 1000)))
@@ -61,7 +62,7 @@
     {:terran terran
      :martian (or martian {:current 0 :wrap 1 :reverse true})}))
 
-(defn hands
+(defn time->hands
   [{:keys [terran martian]}]
   (let [{:keys [hours minutes seconds]} (->hms terran)]
     (array
@@ -85,45 +86,70 @@
       :style {:length martian-size :width 1}
       :value martian})))
 
+(defn hands-at
+  ([date]
+   (hands-at date 0))
+  ([date offset]
+   (-> date (seconds-of-day offset) (martian-remap pause-schedule) time->hands)))
+
+(defn clock []
+  (-> d3 (.select "#clock")))
+
+(defn lines []
+  (.selectAll (clock) "line"))
 
 (defn fpart [x]
   (- x (Math/trunc x)))
 
-(defn update-clock! []
-  (let [hands (-> (seconds-of-day) (martian-remap pause-schedule) hands)
-        lines (-> d3
-                  (.select "#clock")
-                  (.attr "height" height)
-                  (.attr "width" width)
-                  (.selectAll "line")
-                  (.data hands))]
-    (-> lines
-        (.exit)
-        (.remove))
+(defn position-hand [l]
+  (.attr l
+         "transform"
+         (-> (d3-transform/transform)
+             (.translate (fn [{{:keys [x y]} :center} & _] (array x y)))
+             (.rotate (fn [{{:keys [wrap current reverse]} :value :as h}]
+                        (let [[current offset] (if reverse
+                                                 [(- current) 0.5]
+                                                 [current 0])]
+                          (-> current (/ wrap) (+ offset) fpart (* 360))))))))
 
-    (-> lines
-        (.enter)
-        (.append "line")
-        (.attr "x1" 0)
-        (.attr "y1" 0)
-        (.attr "x2" 0)
-        (.style "stroke" "rgb(255,0,0)"))
+(defn by-name [d & _] (:name d))
 
-    (-> lines
-        (.attr "y2" (fn [{{:keys [length]} :style} & _] (- length)))
-        (.style "stroke-width" (fn [{{:keys [width]} :style} & _] width))
-        (.attr "transform" (-> (d3-transform/transform)
-                               (.translate (fn [{{:keys [x y]} :center} & _] (array x y)))
-                               (.rotate (fn [{{:keys [wrap current reverse]} :value}]
-                                          (let [[current offset] (if reverse
-                                                                   [(- current) 0.5]
-                                                                   [current 0])]
-                                            (-> current (/ wrap) (+ offset) fpart (* 360))))))))))
+(defn update-clock!
+  ([]
+   (update-clock! (js/Date.)))
+  ([now]
+   (-> (lines)
+       (.data (hands-at now update-interval) by-name)
+       .transition
+       (.duration update-interval)
+       (.ease d3/easeLinear)
+       position-hand)))
+
+(defn create-hand [lines]
+  (-> lines
+      (.append "line")
+      (.attr "x1" 0)
+      (.attr "y1" 0)
+      (.attr "x2" 0)
+      (.attr "y2" (fn [{{:keys [length]} :style} & _] (- length)))
+      position-hand
+      (.style "stroke-width" (fn [{{:keys [width]} :style} & _] width))
+      (.style "stroke" "rgb(255,0,0)")))
+
+(defn init-clock! []
+  (-> (clock) (.attr "height" height) (.attr "width" width))
+  (let [now (js/Date.)]
+    (-> (lines)
+        (.data (hands-at now) by-name)
+        .enter
+        create-hand)
+    (update-clock! now)))
 
 (defonce interval (atom nil))
 
 (defn main! []
-  (reset! interval (js/setInterval update-clock! 50)))
+  (init-clock!)
+  (reset! interval (js/setInterval update-clock! update-interval)))
 
 (defn reload! []
   (js/clearInterval @interval)
