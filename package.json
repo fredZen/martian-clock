@@ -1,5 +1,6 @@
 {
   "homepage": "http://fredZen.github.io/martian-clock",
+  "license": "MIT",
   "dependencies": {
     "d3": "^5.9.7",
     "d3-transform": "^1.0.5"

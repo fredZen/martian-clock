@@ -1,3 +1,7 @@
+;;; Copyright 2019 Frederic Merizen
+;;;
+;;; SPDX-License-Identifier: MIT
+
 (ns app.main-test
   (:require
    [app.main :as main]
