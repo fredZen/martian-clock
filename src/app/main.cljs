@@ -23,15 +23,13 @@
 (def seconds-per-day (* 24 60 60))
 
 (defn seconds-of-day
-  ([date]
-   (seconds-of-day date 0))
-  ([date offset]
-   (-> date
-       .getTime
-       (+ offset)
-       (/ 1000)
-       (- (-> date .getTimezoneOffset (* 60)))
-       (mod seconds-per-day))))
+  [date offset]
+  (-> date
+      .getTime
+      (+ offset)
+      (/ 1000)
+      (- (-> date .getTimezoneOffset (* 60)))
+      (mod seconds-per-day)))
 
 (defn round3 [x]
   (-> x (* 1000) (Math/round) (/ 1000)))
@@ -87,16 +85,21 @@
       :value martian})))
 
 (defn hands-at
-  ([date]
-   (hands-at date 0))
-  ([date offset]
-   (-> date (seconds-of-day offset) (martian-remap pause-schedule) time->hands)))
+  [date offset]
+  (-> date (seconds-of-day offset) (martian-remap pause-schedule) time->hands))
 
 (defn clock []
   (-> d3 (.select "#clock")))
 
-(defn lines []
-  (.selectAll (clock) "line"))
+(defn by-name [d & _] (:name d))
+
+(defn lines
+  ([date]
+   (lines date 0))
+  ([date offset]
+   (-> (clock)
+       (.selectAll  "line")
+       (.data (hands-at date offset) by-name))))
 
 (defn fpart [x]
   (- x (Math/trunc x)))
@@ -112,14 +115,11 @@
                                                  [current 0])]
                           (-> current (/ wrap) (+ offset) fpart (* 360))))))))
 
-(defn by-name [d & _] (:name d))
-
 (defn update-clock!
   ([]
    (update-clock! (js/Date.)))
   ([now]
-   (-> (lines)
-       (.data (hands-at now update-interval) by-name)
+   (-> (lines now update-interval)
        .transition
        (.duration update-interval)
        (.ease d3/easeLinear)
@@ -139,8 +139,7 @@
 (defn init-clock! []
   (-> (clock) (.attr "height" height) (.attr "width" width))
   (let [now (js/Date.)]
-    (-> (lines)
-        (.data (hands-at now) by-name)
+    (-> (lines now)
         .enter
         create-hand)
     (update-clock! now)))

@@ -6,18 +6,18 @@
 (deftest seconds-of-day
   (testing "in local time zone"
     (is (= (-> 14 (* 60) (+ 48) (* 60) (+ 37))
-           (main/seconds-of-day (js/Date. "2011-10-10T14:48:37.000"))))))
+           (main/seconds-of-day (js/Date. "2011-10-10T14:48:37.000") 0)))))
 
 (deftest ->hms
   (testing "with only hours"
     (is (= {:hours 2 :minutes 0 :seconds 0}
-           (-> "2011-10-10T14:00:00.000" (js/Date.) main/seconds-of-day main/->hms))))
+           (-> "2011-10-10T14:00:00.000" (js/Date.) (main/seconds-of-day 0) main/->hms))))
   (testing "with minutes"
     (is (= {:hours 2.5 :minutes 30 :seconds 0}
-           (-> "2011-10-10T14:30:00.000" (js/Date.) main/seconds-of-day main/->hms))))
+           (-> "2011-10-10T14:30:00.000" (js/Date.) (main/seconds-of-day 0) main/->hms))))
   (testing "with seconds"
     (is (= {:hours 2.51 :minutes 30.6 :seconds 36}
-           (-> "2011-10-10T14:30:36.000" (js/Date.) main/seconds-of-day main/->hms)))))
+           (-> "2011-10-10T14:30:36.000" (js/Date.) (main/seconds-of-day 0) main/->hms)))))
 
 (deftest ->time
   (is (= 3600 (main/->time 1)))
