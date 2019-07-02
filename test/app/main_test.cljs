@@ -29,14 +29,21 @@
   (is (= 2 (main/time-correction-factor [{:pause (main/->time 24)}]))))
 
 (deftest martian-remap
-  (is (= {:terran 1234 :martian {:current 0 :wrap 1}}
+  (is (= {:terran 1234
+          :martian {:current 0, :wrap 1, :reverse true}}
          (main/martian-remap 1234 [])))
-  (is (= {:terran 2468 :martian {:current 0 :wrap 1}}
-         (main/martian-remap 1234 [{:start 10000
-                                    :pause (main/->time 24)}])))
-  (is (= {:terran (main/->time 2) :martian {:current 0 :wrap 1}}
-         (main/martian-remap (main/->time 13) [{:start (main/->time 1)
-                                                :pause (main/->time 24)}])))
-  (is (= {:terran (main/->time 1) :martian {:current (main/->time 12) :wrap (main/->time 24)}}
-         (main/martian-remap (main/->time 6 30) [{:start (main/->time 1)
-                                                  :pause (main/->time 24)}]))))
+  (is (= {:terran 2468
+          :martian {:current 0, :wrap 1, :reverse true}}
+         (main/martian-remap 1234 [{:start 10000, :pause (main/->time 24)}])))
+  (is (= {:terran (main/->time 2)
+          :martian {:current 0, :wrap 1, :reverse true}}
+         (main/martian-remap (main/->time 13)
+                             [{:start (main/->time 1)
+                               :pause (main/->time 24)}])))
+  (is (= {:terran (main/->time 1)
+          :martian {:current (main/->time 12)
+                    :wrap (main/->time 24)
+                    :reverse true}}
+         (main/martian-remap (main/->time 6 30)
+                             [{:start (main/->time 1)
+                               :pause (main/->time 24)}]))))
