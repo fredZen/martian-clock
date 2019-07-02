@@ -4,7 +4,8 @@
                 :asset-path "."
                 :target :browser
                 :modules {:main {:init-fn app.main/main!}}
-                :devtools {:after-load app.main/reload!
+                :devtools {:before-load app.main/unload!
+                           :after-load app.main/reload!
                            :http-root "target"
                            :http-port 8080}}
           :test

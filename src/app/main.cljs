@@ -163,9 +163,17 @@
 
 (defonce interval (atom nil))
 
+(defn disbale-zooming [e]
+  (when-not (= 1 (.-scale e))
+    (.preventDefault e)))
+
 (defn main! []
+  (js/document.addEventListener "touchmove" disbale-zooming false)
   (init-clock!)
   (reset! interval (js/setInterval update-clock! update-interval)))
+
+(defn unload! []
+  (js/document.removeEventListener "touchmove" disbale-zooming false))
 
 (defn reload! []
   (js/clearInterval @interval)
