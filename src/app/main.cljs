@@ -136,8 +136,20 @@
       (.style "stroke-width" (fn [{{:keys [width]} :style} & _] width))
       (.style "stroke" "rgb(255,0,0)")))
 
+
+(defn draw-dials [clock]
+  (-> clock
+      (.selectAll "circle")
+      (.data (array {:center terran-center :radius terran-size}
+                    {:center martian-center :radius martian-size}))
+      .enter
+      (.append "circle")
+      (.attr "cx" (fn [d & _] (-> d :center :x)))
+      (.attr "cy" (fn [d & _] (-> d :center :y)))
+      (.attr "r" (fn [d & _] (-> d :radius)))))
+
 (defn init-clock! []
-  (-> (clock) (.attr "height" height) (.attr "width" width))
+  (-> (clock) (.attr "height" height) (.attr "width" width) draw-dials)
   (let [now (js/Date.)]
     (-> (lines now)
         .enter
